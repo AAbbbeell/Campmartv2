@@ -18,8 +18,21 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _referralController = TextEditingController();
+  String _selectedCampus = '';
   bool _obscurePassword = true;
   String? _error;
+
+  final List<String> _campuses = [
+    'Main Campus',
+    'Kwakuti',
+    'Tech Hub',
+    'Student Village',
+    'Faculty of Science',
+    'Faculty of Arts',
+    'Faculty of Engineering',
+    'Medical Campus',
+  ];
 
   @override
   void dispose() {
@@ -27,6 +40,7 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _referralController.dispose();
     super.dispose();
   }
 
@@ -40,6 +54,10 @@ class _SignupScreenState extends State<SignupScreen> {
       email: _emailController.text,
       phone: _phoneController.text,
       password: _passwordController.text,
+      campus: _selectedCampus.isNotEmpty ? _selectedCampus : null,
+      referredBy: _referralController.text.isNotEmpty
+          ? _referralController.text
+          : null,
     );
 
     if (!mounted) return;
@@ -72,6 +90,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   _buildEmailField(),
                   const SizedBox(height: 16),
                   _buildPhoneField(),
+                  const SizedBox(height: 16),
+                  _buildCampusField(),
+                  const SizedBox(height: 16),
+                  _buildReferralField(),
                   const SizedBox(height: 16),
                   _buildPasswordField(),
                   if (_error != null) ...[
@@ -173,6 +195,36 @@ class _SignupScreenState extends State<SignupScreen> {
         if (value == null || value.trim().isEmpty) return 'Phone number is required';
         return null;
       },
+    );
+  }
+
+  Widget _buildCampusField() {
+    return DropdownButtonFormField<String>(
+      value: _selectedCampus.isEmpty ? null : _selectedCampus,
+      decoration: _inputDecoration('Campus', Icons.school_outlined),
+      hint: const Text(
+        'Select your campus',
+        style: TextStyle(color: AppColors.onSurfaceVariant),
+      ),
+      items: _campuses
+          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+          .toList(),
+      onChanged: (value) {
+        if (value != null) setState(() => _selectedCampus = value);
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Please select your campus';
+        return null;
+      },
+    );
+  }
+
+  Widget _buildReferralField() {
+    return TextFormField(
+      controller: _referralController,
+      textInputAction: TextInputAction.next,
+      decoration: _inputDecoration('Referral code (optional)', Icons.card_giftcard_outlined),
+      validator: (_) => null,
     );
   }
 

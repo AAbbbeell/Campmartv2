@@ -5,7 +5,7 @@ import '../models/product.dart';
 import '../services/wallet_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/camp_search_bar.dart';
-import 'cart_screen.dart';
+import 'product_description_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   final WalletService walletService;
@@ -173,7 +173,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CartScreen(
+                      builder: (_) => ProductDescriptionScreen(
                         product: products[index],
                         walletService: widget.walletService,
                       ),

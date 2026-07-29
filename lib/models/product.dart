@@ -71,6 +71,7 @@ class Product {
       location: 'Kwakuti',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuD_VW3b4Egcz_tmi6Nd0an_nwgN25Ba3wpB6Mn1C5JhFhazUi4mQP2-mPPY3g6U4frzjAIvh9Syo2eqeKh5kS9BY8VYAS0u87kzNNMV5jKg76dI5nO8Y0PDWaZ2TVY8hx9GOiqOJ2tTA6f_jl2oJ5NDnUSUpRwni3h6-Okk06G0CgKaYYSGBfW2bdri3X5wJ32OxKVIEa4UAG48aUK977zduLObVomyfzDCjsxL3vrl0U48_zwf-wX6XImlFI9me8wrRdVk4caPRPKA',
+      description: 'Beautiful handmade bracelet crafted with premium materials. Perfect for casual and formal occasions.',
       category: 'Accessories',
       stock: 10,
     ),
@@ -82,6 +83,7 @@ class Product {
       location: 'Kwakuti',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuCdxIQAz--O7K5EwVLDAIwhhnyYtxl91f0GbDNOduo5DnwxuQFiCxjIPuSbxh31qNNw00odayVkrKfPEa9BjvY2CY-9qa5-07mkjdLdg-of-T8JjzCoZhqcRddm46nQmd7KFnQIW0Qf--iJtqbbvKXks7dClahXIB8eVEI08QGnUhqjlS1QnupamA56I4ffbFuMp_xvzNXZdJSryFCyUWMj9PhpvQHH-2gbZ85KSabZhUDKqt37mQi5jyfbQcVeWQDuAZWEWTXAFbo7',
+      description: 'Elegant pearl necklace set that adds a touch of class to any outfit. Includes matching earrings.',
       category: 'Jewelry',
       stock: 5,
     ),
@@ -93,6 +95,7 @@ class Product {
       location: 'Kwakuti',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuBz2xI6dgNp5bznMGN-_v9PaBp7daHosepzNa19VWUXpeo7TQTMStzhLD8dTtlhSURjCs8_XEpd3CJiguCDhUMohXM-da81g2hPnZxLIm-CXCCnMjqd9faq3348r6Fbp_k0sJFzxY6ZEI-2aNNRuY6JnRkf7TJFOZGMTvTUxB_BG3C4ddggdE6VXaw41zyHL0oj-YvrRCZE7UNaffPhAY4eTmuT_Yk9qVD93D9tdAknT7D9FUeXXlnP4pn5yhmVH1YwMWd3MpGgGGCV',
+      description: 'Stunning handcrafted necklace with intricate detailing. Lightweight and comfortable for all-day wear.',
       category: 'Jewelry',
       stock: 3,
     ),
@@ -104,6 +107,7 @@ class Product {
       location: 'Kwakuti',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuCh5DDdWUOdVm3pGtYqaF-dcwMGznt9wuzVAO9-u6fT5YOFFTjTLa-W3XzjUh-jHUZJ3W2t2_lNgTRN3VnmAR4sd5fX5jfVlohUC0v0TwXyesGfDjw4DAjhTzaCS0hgjoynd2sngq5AFfl41tTLCAxO3uuz70wEZNAaszKflp88YWbuR2oU28y6ZCExVkjeL5bOoQCLDJfl3R5hhiFKCnYcoYFn77NNgMxhKyRFUyGlxJ7DZVRSd7LVrRml7PMgBsvGMvf0zjT1_VUN',
+      description: 'Affordable yet stylish necklace. Great for daily wear or as a thoughtful gift for loved ones.',
       category: 'Jewelry',
       stock: 8,
     ),
@@ -115,6 +119,7 @@ class Product {
       location: 'Main Campus',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuD_VW3b4Egcz_tmi6Nd0an_nwgN25Ba3wpB6Mn1C5JhFhazUi4mQP2-mPPY3g6U4frzjAIvh9Syo2eqeKh5kS9BY8VYAS0u87kzNNMV5jKg76dI5nO8Y0PDWaZ2TVY8hx9GOiqOJ2tTA6f_jl2oJ5NDnUSUpRwni3h6-Okk06G0CgKaYYSGBfW2bdri3X5wJ32OxKVIEa4UAG48aUK977zduLObVomyfzDCjsxL3vrl0U48_zwf-wX6XImlFI9me8wrRdVk4caPRPKA',
+      description: 'Spacious and durable handmade bag. Features multiple compartments for organized storage. Made from eco-friendly materials.',
       category: 'Bags',
       stock: 2,
     ),
@@ -126,6 +131,7 @@ class Product {
       location: 'Tech Hub',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuCdxIQAz--O7K5EwVLDAIwhhnyYtxl91f0GbDNOduo5DnwxuQFiCxjIPuSbxh31qNNw00odayVkrKfPEa9BjvY2CY-9qa5-07mkjdLdg-of-T8JjzCoZhqcRddm46nQmd7KFnQIW0Qf--iJtqbbvKXks7dClahXIB8eVEI08QGnUhqjlS1QnupamA56I4ffbFuMp_xvzNXZdJSryFCyUWMj9PhpvQHH-2gbZ85KSabZhUDKqt37mQi5jyfbQcVeWQDuAZWEWTXAFbo7',
+      description: 'High-quality wireless earbuds with noise cancellation. Up to 8 hours of battery life. Comfortable fit for all ear sizes.',
       category: 'Electronics',
       stock: 15,
     ),

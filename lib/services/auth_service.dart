@@ -7,6 +7,8 @@ class User {
   final String name;
   final String email;
   final String? phone;
+  final String? campus;
+  final String? referredBy;
   final DateTime createdAt;
 
   const User({
@@ -14,6 +16,8 @@ class User {
     required this.name,
     required this.email,
     this.phone,
+    this.campus,
+    this.referredBy,
     required this.createdAt,
   });
 
@@ -22,6 +26,8 @@ class User {
         'name': name,
         'email': email,
         'phone': phone,
+        'campus': campus,
+        'referredBy': referredBy,
         'createdAt': createdAt.toIso8601String(),
       };
 
@@ -30,6 +36,8 @@ class User {
         name: json['name'] as String,
         email: json['email'] as String,
         phone: json['phone'] as String?,
+        campus: json['campus'] as String?,
+        referredBy: json['referredBy'] as String?,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
 }
@@ -137,6 +145,8 @@ class AuthService extends ChangeNotifier {
     required String email,
     required String phone,
     required String password,
+    String? campus,
+    String? referredBy,
   }) async {
     if (name.trim().isEmpty) return 'Name is required';
 
@@ -169,6 +179,8 @@ class AuthService extends ChangeNotifier {
       name: name.trim(),
       email: email.trim(),
       phone: phone.trim(),
+      campus: campus?.trim(),
+      referredBy: referredBy?.trim(),
       createdAt: DateTime.now(),
     );
 

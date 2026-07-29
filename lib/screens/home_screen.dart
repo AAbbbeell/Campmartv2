@@ -12,7 +12,7 @@ import 'products_screen.dart';
 import 'services_screen.dart';
 import 'sell_screen.dart';
 import 'account_screen.dart';
-import 'cart_screen.dart';
+import 'product_description_screen.dart';
 import 'my_cart_screen.dart';
 import '../models/cart.dart';
 import '../services/auth_service.dart';
@@ -272,7 +272,7 @@ class _HomeContentState extends State<_HomeContent> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => CartScreen(
+                      builder: (_) => ProductDescriptionScreen(
                         product: products[index],
                         walletService: widget.walletService,
                       ),
@@ -348,7 +348,7 @@ class _HomeContentState extends State<_HomeContent> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CartScreen(
+                        builder: (_) => ProductDescriptionScreen(
                           product: products[index],
                           walletService: widget.walletService,
                         ),
