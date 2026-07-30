@@ -5,7 +5,9 @@ import '../models/product.dart';
 import '../models/cart.dart';
 import '../services/wallet_service.dart';
 import '../widgets/app_header.dart';
+import '../widgets/product_card.dart';
 import 'cart_screen.dart';
+import 'products_screen.dart';
 
 class ProductDescriptionScreen extends StatefulWidget {
   final Product product;
@@ -24,6 +26,31 @@ class ProductDescriptionScreen extends StatefulWidget {
 
 class _ProductDescriptionScreenState extends State<ProductDescriptionScreen> {
   final Cart _cart = Cart();
+
+  List<Product> get _recommendedProducts {
+    final allProducts = Product.sampleProducts;
+    final currentProduct = widget.product;
+    
+    // Filter out the current product
+    final otherProducts = allProducts
+        .where((p) => p.id != currentProduct.id)
+        .toList();
+    
+    // If product has a category, prioritize products from the same category
+    if (currentProduct.category != null) {
+      final sameCategory = otherProducts
+          .where((p) => p.category == currentProduct.category)
+          .toList();
+      
+      if (sameCategory.isNotEmpty) {
+        // Return up to 4 products from the same category
+        return sameCategory.take(4).toList();
+      }
+    }
+    
+    // Otherwise, return up to 4 random products
+    return otherProducts.take(4).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +88,8 @@ class _ProductDescriptionScreenState extends State<ProductDescriptionScreen> {
                           ],
                           const SizedBox(height: 20),
                           _buildActionButtons(product),
+                          const SizedBox(height: 32),
+                          if (_recommendedProducts.isNotEmpty) _buildRecommendations(),
                         ],
                       ),
                     ),
@@ -347,6 +376,76 @@ class _ProductDescriptionScreenState extends State<ProductDescriptionScreen> {
               'Buy Now',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecommendations() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'You May Also Like',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProductsScreen(
+                      walletService: widget.walletService,
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                'View All',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 220,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _recommendedProducts.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final product = _recommendedProducts[index];
+              return SizedBox(
+                width: 160,
+                child: ProductCard(
+                  product: product,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductDescriptionScreen(
+                          product: product,
+                          walletService: widget.walletService,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ),
       ],

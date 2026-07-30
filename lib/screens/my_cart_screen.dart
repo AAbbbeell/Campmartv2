@@ -16,6 +16,7 @@ class MyCartScreen extends StatefulWidget {
 
 class _MyCartScreenState extends State<MyCartScreen> {
   final Cart _cart = Cart();
+  String? _selectedDeliveryLocation;
 
   @override
   void initState() {
@@ -268,6 +269,13 @@ class _MyCartScreenState extends State<MyCartScreen> {
                 subtitle: 'Pay with Visa or Mastercard',
                 onTap: () => _processPayment('Card'),
               ),
+              const SizedBox(height: 8),
+              _PaymentOption(
+                icon: Icons.local_shipping,
+                title: 'Pay on Delivery',
+                subtitle: 'Pay when you receive your order',
+                onTap: () => _showLocationSelectionSheet(),
+              ),
               const SizedBox(height: 24),
             ],
           ),
@@ -295,7 +303,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
       return;
     }
     _cart.clear();
-    _showSuccessDialog('Wallet');
+    _showSuccessDialog('Wallet', null);
   }
 
   void _showInsufficientBalanceSheet() {
@@ -408,10 +416,175 @@ class _MyCartScreenState extends State<MyCartScreen> {
   void _processPayment(String method) {
     Navigator.pop(context);
     _cart.clear();
-    _showSuccessDialog(method);
+    final location = method == 'Pay on Delivery' ? _selectedDeliveryLocation : null;
+    _showSuccessDialog(method, location);
+    // Reset delivery location after order is complete
+    setState(() {
+      _selectedDeliveryLocation = null;
+    });
   }
 
-  void _showSuccessDialog(String method) {
+  void _showLocationSelectionSheet() {
+    Navigator.pop(context);
+    
+    final deliveryLocations = [
+      'Main Gate',
+      'Student Union Building',
+      'Library Complex',
+      'Faculty of Science',
+      'Faculty of Engineering',
+      'Sports Complex',
+      'Hostel Area A',
+      'Hostel Area B',
+      'Cafeteria',
+      'Admin Block',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Select Delivery Location', style: AppTextStyles.headlineMd),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Choose where you want to receive your order and make payment.',
+                    style: AppTextStyles.bodyMd.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 300),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: deliveryLocations.length,
+                      itemBuilder: (context, index) {
+                        final location = deliveryLocations[index];
+                        final isSelected = _selectedDeliveryLocation == location;
+                        
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              _selectedDeliveryLocation = location;
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isSelected 
+                                  ? AppColors.primary.withValues(alpha: 0.1)
+                                  : AppColors.surfaceContainerLowest,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : AppColors.outlineVariant,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected 
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: isSelected 
+                                      ? AppColors.primary
+                                      : AppColors.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    location,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.onSurface,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _selectedDeliveryLocation != null
+                          ? () {
+                              Navigator.pop(context);
+                              _processPayment('Pay on Delivery');
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        _selectedDeliveryLocation != null
+                            ? 'Confirm Location: $_selectedDeliveryLocation'
+                            : 'Select a Location',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(String method, String? deliveryLocation) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -438,6 +611,49 @@ class _MyCartScreenState extends State<MyCartScreen> {
                 color: AppColors.onSurfaceVariant,
               ),
             ),
+            if (method == 'Pay on Delivery' && deliveryLocation != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Delivery Location',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          Text(
+                            deliveryLocation,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,

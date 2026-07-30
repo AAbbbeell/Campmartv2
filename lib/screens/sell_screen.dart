@@ -97,7 +97,7 @@ class _SellScreenState extends State<SellScreen> {
           children: [
             AppHeader(
               showBackButton: true,
-              title: 'My Products',
+              title: 'Products',
               walletService: widget.walletService,
             ),
             Expanded(
@@ -129,7 +129,7 @@ class _SellScreenState extends State<SellScreen> {
           children: [
             Expanded(
               child: Text(
-                'My Products',
+                'Products',
                 style: AppTextStyles.headlineLg,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

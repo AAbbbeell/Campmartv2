@@ -144,21 +144,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget _buildProductGrid() {
     final products = _filteredProducts;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
             '${products.length} product${products.length == 1 ? '' : 's'} found',
             style: AppTextStyles.bodyMd.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 12,
@@ -183,8 +184,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
               );
             },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

@@ -57,7 +57,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             _buildBrand(),
           if (title != null && !showBackButton) ...[
             const SizedBox(width: 12),
-            Text(title!, style: AppTextStyles.headlineMd),
+            Text(
+              title!,
+              style: AppTextStyles.headlineMd,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
           const Spacer(),
           if (showBackButton && title != null) ...[
@@ -66,6 +71,8 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 title!,
                 style: AppTextStyles.headlineMd,
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             const Spacer(),

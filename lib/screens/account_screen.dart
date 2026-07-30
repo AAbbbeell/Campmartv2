@@ -4,6 +4,7 @@ import '../constants/app_text_styles.dart';
 import '../services/auth_service.dart';
 import '../services/wallet_service.dart';
 import 'wallet_screen.dart';
+import 'edit_profile_screen.dart';
 
 class AccountScreen extends StatelessWidget {
   final AuthService authService;
@@ -71,44 +72,95 @@ class AccountScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.outlineVariant),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                _showLogoutDialog(context);
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.logout,
-                      color: AppColors.onSurfaceVariant,
-                      size: 20,
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Log\nout',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onSurface,
-                        height: 1.2,
+        Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.outlineVariant),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditProfileScreen(
+                          walletService: walletService,
+                        ),
                       ),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.edit,
+                          color: AppColors.onSurfaceVariant,
+                          size: 20,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Edit\nProfile',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.onSurface,
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.outlineVariant),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () {
+                    _showLogoutDialog(context);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.logout,
+                          color: AppColors.onSurfaceVariant,
+                          size: 20,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Log\nout',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.onSurface,
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
