@@ -154,7 +154,7 @@ class Product {
       name: 'Tutorial Session',
       price: 3500,
       seller: 'Dr. Okonkwo',
-      location: 'Faculty of Science',
+      location: 'Federal University of Technology',
       imageUrl:
           'https://lh3.googleusercontent.com/aida-public/AB6AXuA8mgA1KYFIVdftse8YJKrPUMR_qYGyxA6M9tzLO8lyLwHuZ50twAK5TfyaTwCFn53UhKpT8pBhAiDJ5UprndgBvGPFGYyx6SgG6B9dWEi3vVegyVhPjJh5eajmssgVOSuvOnTIngF1hpvZ-ebNoWvlF06lOLeBWbQFGGSPaMv0EIXbCPPq1P3WUB5e9c5xct6aLIR1D9Wijfe-vc_GBqGokWNnyOp5306x7cPETt1omlLGWkDLFSSxBlD9BeZmeYqx9X-bwEirkvDI',
       category: 'Services',

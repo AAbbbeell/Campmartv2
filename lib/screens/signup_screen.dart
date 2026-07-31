@@ -24,14 +24,9 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _error;
 
   final List<String> _campuses = [
-    'Main Campus',
-    'Kwakuti',
-    'Tech Hub',
-    'Student Village',
-    'Faculty of Science',
-    'Faculty of Arts',
-    'Faculty of Engineering',
-    'Medical Campus',
+    'Federal University of Technology',
+    'University of Medical Sciences Ondo',
+    'Obafemi Awolowo University Ife',
   ];
 
   @override
@@ -74,7 +69,7 @@ class _SignupScreenState extends State<SignupScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Form(
               key: _formKey,
               child: Column(
@@ -82,27 +77,27 @@ class _SignupScreenState extends State<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildLogo(),
-                  const SizedBox(height: 40),
-                  _buildTitle(),
                   const SizedBox(height: 32),
+                  _buildTitle(),
+                  const SizedBox(height: 24),
                   _buildNameField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildEmailField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildPhoneField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildCampusField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildReferralField(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildPasswordField(),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     _buildError(),
                   ],
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _buildSignupButton(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   _buildLoginLink(),
                 ],
               ),
@@ -117,23 +112,23 @@ class _SignupScreenState extends State<SignupScreen> {
     return Column(
       children: [
         Container(
-          width: 72,
-          height: 72,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             color: AppColors.brandGreen,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: const Icon(
             Icons.storefront,
             color: Colors.white,
-            size: 40,
+            size: 36,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         const Text(
           'CampMart',
           style: TextStyle(
-            fontSize: 28,
+            fontSize: 24,
             fontWeight: FontWeight.w700,
             color: AppColors.brandGreen,
           ),
@@ -207,7 +202,15 @@ class _SignupScreenState extends State<SignupScreen> {
         style: TextStyle(color: AppColors.onSurfaceVariant),
       ),
       items: _campuses
-          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+          .map((c) => DropdownMenuItem(
+                value: c,
+                child: Text(
+                  c,
+                  style: const TextStyle(fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ))
           .toList(),
       onChanged: (value) {
         if (value != null) setState(() => _selectedCampus = value);
@@ -216,6 +219,7 @@ class _SignupScreenState extends State<SignupScreen> {
         if (value == null || value.isEmpty) return 'Please select your campus';
         return null;
       },
+      isExpanded: true,
     );
   }
 
@@ -371,7 +375,7 @@ class _SignupScreenState extends State<SignupScreen> {
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.error, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
   }
 }

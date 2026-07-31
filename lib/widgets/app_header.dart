@@ -3,6 +3,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../services/wallet_service.dart';
 import '../screens/my_cart_screen.dart';
+import '../screens/edit_profile_screen.dart';
 
 const String _avatarUrl =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuC5zJSYSDijKSgzL8_FC28LrRRu2lzmP8lHW0uqdB8948RuBYtltgKXIm9usFsU3z1Va9qgJrjgJ4b_Nq-NlxxmbOgW6kuyYhTQw-rPjf4C6cQbLbimrWE4XofQjm8SfSy-xFucIm68GQbCHobgTAz_ZAet8jVRcCMx1Xb123zPfV-2DlHjsWGmiObbk3pm4C5RzMiRDTp8TUK6w_89aNqITy4fd3q72MFBbQ71IzBGdenqA9E_GPSA0DqA8ynnAcEeSYwMltR6Lo3N';
@@ -80,7 +81,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
           _buildCartButton(context),
           if (showAvatar) ...[
             const SizedBox(width: 4),
-            _buildAvatar(),
+            _buildAvatar(context),
           ],
         ],
       ),
@@ -179,22 +180,34 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _buildAvatar() {
-    return Container(
-      width: 36,
-      height: 36,
-      padding: const EdgeInsets.all(1.5),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.outlineVariant, width: 2),
-      ),
-      child: ClipOval(
-        child: Image.network(
-          _avatarUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            color: Colors.grey.shade300,
-            child: const Icon(Icons.person, color: Colors.white, size: 20),
+  Widget _buildAvatar(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EditProfileScreen(
+              walletService: walletService,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 36,
+        height: 36,
+        padding: const EdgeInsets.all(1.5),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.outlineVariant, width: 2),
+        ),
+        child: ClipOval(
+          child: Image.network(
+            _avatarUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: Colors.grey.shade300,
+              child: const Icon(Icons.person, color: Colors.white, size: 20),
+            ),
           ),
         ),
       ),

@@ -5,6 +5,7 @@ import '../models/cart.dart';
 import '../services/wallet_service.dart';
 import '../widgets/app_header.dart';
 import 'wallet_screen.dart';
+import 'delivery_tracking_screen.dart';
 
 class MyCartScreen extends StatefulWidget {
   final WalletService walletService;
@@ -451,10 +452,10 @@ class _MyCartScreenState extends State<MyCartScreen> {
           builder: (context, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -470,9 +471,9 @@ class _MyCartScreenState extends State<MyCartScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   const Text('Select Delivery Location', style: AppTextStyles.headlineMd),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     'Choose where you want to receive your order and make payment.',
                     style: AppTextStyles.bodyMd.copyWith(
@@ -497,7 +498,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
                           },
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: isSelected 
                                   ? AppColors.primary.withValues(alpha: 0.1)
@@ -512,31 +513,34 @@ class _MyCartScreenState extends State<MyCartScreen> {
                             child: Row(
                               children: [
                                 Icon(
-                                  isSelected 
+                                  isSelected
                                       ? Icons.radio_button_checked
                                       : Icons.radio_button_unchecked,
-                                  color: isSelected 
+                                  color: isSelected
                                       ? AppColors.primary
                                       : AppColors.onSurfaceVariant,
+                                  size: 20,
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     location,
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                       color: isSelected
                                           ? AppColors.primary
                                           : AppColors.onSurface,
                                     ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
                                 ),
                                 if (isSelected)
                                   const Icon(
                                     Icons.check_circle,
                                     color: AppColors.primary,
-                                    size: 20,
+                                    size: 18,
                                   ),
                               ],
                             ),
@@ -558,7 +562,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -566,7 +570,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
                       ),
                       child: Text(
                         _selectedDeliveryLocation != null
-                            ? 'Confirm Location: $_selectedDeliveryLocation'
+                            ? 'Confirm Location'
                             : 'Select a Location',
                         style: const TextStyle(
                           fontSize: 14,
@@ -661,6 +665,17 @@ class _MyCartScreenState extends State<MyCartScreen> {
                 onPressed: () {
                   Navigator.pop(context);
                   Navigator.pop(context);
+                  if (method == 'Pay on Delivery' && deliveryLocation != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DeliveryTrackingScreen(
+                          deliveryLocation: deliveryLocation,
+                          walletService: widget.walletService,
+                        ),
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -670,9 +685,11 @@ class _MyCartScreenState extends State<MyCartScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Continue Shopping',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                child: Text(
+                  method == 'Pay on Delivery' && deliveryLocation != null
+                      ? 'Track Delivery'
+                      : 'Continue Shopping',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
