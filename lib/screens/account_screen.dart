@@ -4,9 +4,9 @@ import '../constants/app_text_styles.dart';
 import '../services/auth_service.dart';
 import '../services/wallet_service.dart';
 import 'wallet_screen.dart';
-import 'edit_profile_screen.dart';
+import 'login_screen.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   final AuthService authService;
   final WalletService walletService;
   const AccountScreen({
@@ -14,6 +14,14 @@ class AccountScreen extends StatelessWidget {
     required this.authService,
     required this.walletService,
   });
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  AuthService get authService => widget.authService;
+  WalletService get walletService => widget.walletService;
 
   @override
   Widget build(BuildContext context) {
@@ -118,19 +126,30 @@ class AccountScreen extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Log out'),
         content: const Text('Are you sure you want to log out?'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              authService.logout();
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await authService.logout();
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LoginScreen(
+                      authService: authService,
+                      walletService: walletService,
+                    ),
+                  ),
+                );
+              }
             },
             child: const Text(
               'Log out',

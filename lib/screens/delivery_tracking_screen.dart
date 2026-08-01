@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_text_styles.dart';
 import '../widgets/app_header.dart';
 import '../services/wallet_service.dart';
 

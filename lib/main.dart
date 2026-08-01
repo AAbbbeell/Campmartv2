@@ -63,7 +63,10 @@ class _MyAppState extends State<MyApp> {
                   authService: widget.authService,
                   walletService: widget.walletService,
                 )
-              : LoginScreen(authService: widget.authService),
+              : LoginScreen(
+                  authService: widget.authService,
+                  walletService: widget.walletService,
+                ),
         );
       },
     );

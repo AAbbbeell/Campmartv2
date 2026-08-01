@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../services/auth_service.dart';
+import '../services/wallet_service.dart';
 import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   final AuthService authService;
-  const SignupScreen({super.key, required this.authService});
+  final WalletService? walletService;
+  const SignupScreen({super.key, required this.authService, this.walletService});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -59,6 +61,17 @@ class _SignupScreenState extends State<SignupScreen> {
 
     if (error != null) {
       setState(() => _error = error);
+    } else {
+      // Signup successful - navigate to login screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LoginScreen(
+            authService: widget.authService,
+            walletService: widget.walletService,
+          ),
+        ),
+      );
     }
   }
 
@@ -195,7 +208,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildCampusField() {
     return DropdownButtonFormField<String>(
-      value: _selectedCampus.isEmpty ? null : _selectedCampus,
+      initialValue: _selectedCampus.isEmpty ? null : _selectedCampus,
       decoration: _inputDecoration('Campus', Icons.school_outlined),
       hint: const Text(
         'Select your campus',
@@ -332,7 +345,10 @@ class _SignupScreenState extends State<SignupScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => LoginScreen(authService: widget.authService),
+                builder: (_) => LoginScreen(
+                  authService: widget.authService,
+                  walletService: widget.walletService,
+                ),
               ),
             );
           },

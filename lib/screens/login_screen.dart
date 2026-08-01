@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../services/auth_service.dart';
+import '../services/wallet_service.dart';
 import 'signup_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final AuthService authService;
-  const LoginScreen({super.key, required this.authService});
+  final WalletService? walletService;
+  const LoginScreen({super.key, required this.authService, this.walletService});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -40,6 +43,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (error != null) {
       setState(() => _error = error);
+    } else {
+      // Login successful - navigate to home screen
+      final walletService = widget.walletService ?? WalletService();
+      await walletService.init();
+      
+      if (!mounted) return;
+      
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HomeScreen(
+            authService: widget.authService,
+            walletService: walletService,
+          ),
+        ),
+      );
     }
   }
 
@@ -238,7 +257,10 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => SignupScreen(authService: widget.authService),
+                builder: (_) => SignupScreen(
+                  authService: widget.authService,
+                  walletService: widget.walletService,
+                ),
               ),
             );
           },

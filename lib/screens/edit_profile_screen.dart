@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../services/wallet_service.dart';
-import '../widgets/app_header.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final WalletService walletService;
