@@ -46,77 +46,30 @@ class _AccountScreenState extends State<AccountScreen> {
           const SizedBox(height: 24),
           _buildActivePromotions(),
           const SizedBox(height: 24),
+          _buildLogoutButton(),
         ],
       ),
     );
   }
 
   Widget _buildDashboardHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Dashboard\nOverview',
-                style: TextStyle(
-                  fontSize: 28,
-                  height: 1.2,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.brandGreen,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Check your performance and manage your campus activity.',
-                style: AppTextStyles.bodyMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-            ],
+        const Text(
+          'Dashboard\nOverview',
+          style: TextStyle(
+            fontSize: 28,
+            height: 1.2,
+            fontWeight: FontWeight.w700,
+            color: AppColors.brandGreen,
           ),
         ),
-        const SizedBox(width: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.outlineVariant),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                _showLogoutDialog(context);
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.logout,
-                      color: AppColors.onSurfaceVariant,
-                      size: 20,
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Log\nout',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onSurface,
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+        const SizedBox(height: 8),
+        Text(
+          'Check your performance and manage your campus activity.',
+          style: AppTextStyles.bodyMd.copyWith(
+            color: AppColors.onSurfaceVariant,
           ),
         ),
       ],
@@ -510,6 +463,40 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          _showLogoutDialog(context);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.error,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Log out',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
