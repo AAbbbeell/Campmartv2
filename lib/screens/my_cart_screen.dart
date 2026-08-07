@@ -5,7 +5,7 @@ import '../models/cart.dart';
 import '../services/wallet_service.dart';
 import '../widgets/app_header.dart';
 import 'wallet_screen.dart';
-import 'delivery_tracking_screen.dart';
+import 'purchases_screen.dart';
 
 class MyCartScreen extends StatefulWidget {
   final WalletService walletService;
@@ -615,49 +615,6 @@ class _MyCartScreenState extends State<MyCartScreen> {
                 color: AppColors.onSurfaceVariant,
               ),
             ),
-            if (method == 'Pay on Delivery' && deliveryLocation != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Delivery Location',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          Text(
-                            deliveryLocation,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -665,17 +622,13 @@ class _MyCartScreenState extends State<MyCartScreen> {
                 onPressed: () {
                   Navigator.pop(context);
                   Navigator.pop(context);
-                  if (method == 'Pay on Delivery' && deliveryLocation != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DeliveryTrackingScreen(
-                          deliveryLocation: deliveryLocation,
-                          walletService: widget.walletService,
-                        ),
-                      ),
-                    );
-                  }
+                  // Navigate to purchases screen to see the order
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PurchasesScreen(walletService: widget.walletService),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -686,9 +639,7 @@ class _MyCartScreenState extends State<MyCartScreen> {
                   ),
                 ),
                 child: Text(
-                  method == 'Pay on Delivery' && deliveryLocation != null
-                      ? 'Track Delivery'
-                      : 'Continue Shopping',
+                  'View Orders',
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),

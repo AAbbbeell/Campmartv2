@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../models/product.dart';
+import '../models/api/product.dart' as api_product;
 import '../services/wallet_service.dart';
+import '../services/ai_search_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/camp_search_bar.dart';
+import '../widgets/ai_suggestions_widget.dart';
 import 'product_description_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
@@ -19,6 +22,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
   String _selectedCategory = 'All';
   String _searchQuery = '';
   late TextEditingController _searchController;
+  
+  // AI Search
+  final AiSearchService _aiSearchService = AiSearchService();
+  AiSearchResult<api_product.Product>? _aiSearchResult;
+  bool _isSearching = false;
+  bool _showAiSuggestions = true;
 
   final List<String> _categories = [
     'All',
@@ -64,6 +73,35 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return products;
   }
 
+  // Results shown in the grid: API results when searching, sample data otherwise
+  List<Product> get _displayedProducts {
+    if (_searchQuery.isEmpty) return _filteredProducts;
+    final result = _aiSearchResult;
+    if (result == null) return _filteredProducts;
+
+    var apiMatches = result.exactMatches.map(_toUiProduct).toList();
+    if (_selectedCategory != 'All') {
+      apiMatches = apiMatches
+          .where((p) => p.category == _selectedCategory)
+          .toList();
+    }
+    if (apiMatches.isNotEmpty) return apiMatches;
+    return _filteredProducts;
+  }
+
+  Product _toUiProduct(api_product.Product product) {
+    return Product(
+      id: product.id.toString(),
+      name: product.title,
+      price: product.price,
+      category: product.category?.name ?? 'Uncategorized',
+      seller: product.seller?.fullName ?? 'Unknown',
+      location: 'Campus',
+      imageUrl: product.primaryImage ?? '',
+      description: product.description,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -73,9 +111,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
         const SizedBox(height: 12),
         _buildCategoryChips(),
         const SizedBox(height: 12),
+        if (_showAiSuggestions && _aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty)
+          _buildAiSuggestions(),
         Expanded(
-          child: _filteredProducts.isEmpty
-              ? _buildEmptyState()
+          child: _displayedProducts.isEmpty
+              ? (_aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty
+                  ? const SizedBox.shrink()
+                  : _buildEmptyState())
               : _buildProductGrid(),
         ),
         const SizedBox(height: 24),
@@ -90,10 +132,128 @@ class _ProductsScreenState extends State<ProductsScreen> {
         controller: _searchController,
         hintText: 'Search products...',
         onChanged: (value) {
-          setState(() => _searchQuery = value);
+          setState(() {
+            _searchQuery = value;
+            _aiSearchResult = null;
+            _showAiSuggestions = true;
+            _isSearching = false;
+          });
         },
         onFilterTap: _showFilterSheet,
       ),
+    );
+  }
+
+  Future<void> _performAiSearch([String? query]) async {
+    final q = query ?? _searchQuery;
+    if (q.isEmpty) {
+      setState(() {
+        _aiSearchResult = null;
+        _showAiSuggestions = true;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    if (q.trim().length < 3) {
+      setState(() {
+        _aiSearchResult = null;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+
+    try {
+      // Add minimum delay to ensure loading animation is visible
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      final result = await _aiSearchService.searchProducts(q);
+
+      if (!mounted || q != _searchQuery) return;
+
+      print('AI Search Results: ${result.exactMatches.length} exact, ${result.aiSuggestions.length} AI suggestions, usedAiFallback: ${result.usedAiFallback}');
+
+      setState(() {
+        _aiSearchResult = result;
+        _isSearching = false;
+      });
+    } catch (e) {
+      if (!mounted || q != _searchQuery) return;
+      print('Groq AI search error: $e');
+      setState(() {
+        _isSearching = false;
+        _aiSearchResult = null;
+      });
+    }
+  }
+
+  Widget _buildAiSuggestions() {
+    if (_aiSearchResult == null || _aiSearchResult!.aiSuggestions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return AiSuggestionsWidget<api_product.Product>(
+      suggestions: _aiSearchResult!.aiSuggestions,
+      userQuery: _searchQuery,
+      onDismiss: () => setState(() => _showAiSuggestions = false),
+      itemBuilder: (product) => ProductAiSuggestionCard(
+        product: product,
+        onTap: () {
+          final uiProduct = _toUiProduct(product);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProductDescriptionScreen(
+                product: uiProduct,
+                walletService: widget.walletService,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAiSearchButton() {
+    return ElevatedButton.icon(
+      onPressed: () => _performAiSearch(),
+      icon: const Icon(Icons.auto_awesome, size: 18),
+      label: const Text('Search with AI'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiSearchingIndicator() {
+    return const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+        ),
+        SizedBox(width: 12),
+        Text(
+          'Searching with AI...',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.primary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -142,7 +302,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Widget _buildProductGrid() {
-    final products = _filteredProducts;
+    final products = _displayedProducts;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,6 +371,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
               color: AppColors.onSurfaceVariant,
             ),
           ),
+          if (_searchQuery.trim().length >= 3) ...[
+            const SizedBox(height: 24),
+            _isSearching
+                ? _buildAiSearchingIndicator()
+                : _buildAiSearchButton(),
+          ],
         ],
       ),
     );

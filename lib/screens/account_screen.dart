@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import '../services/wallet_service.dart';
 import 'wallet_screen.dart';
 import 'login_screen.dart';
+import 'purchases_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   final AuthService authService;
@@ -244,6 +245,20 @@ class _AccountScreenState extends State<AccountScreen> {
       children: [
         const Text('Quick Actions', style: AppTextStyles.headlineMd),
         const SizedBox(height: 12),
+        _QuickAction(
+          icon: Icons.shopping_bag_outlined,
+          title: 'My Orders',
+          subtitle: 'Track your purchases and order status.',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PurchasesScreen(walletService: walletService),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
         _QuickAction(
           icon: Icons.add_circle_outline,
           title: 'Post Sale',

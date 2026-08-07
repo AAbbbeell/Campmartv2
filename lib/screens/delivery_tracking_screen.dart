@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../constants/app_colors.dart';
 import '../widgets/app_header.dart';
 import '../services/wallet_service.dart';
@@ -19,9 +21,10 @@ class DeliveryTrackingScreen extends StatefulWidget {
 }
 
 class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
-  GoogleMapController? _mapController;
-  final Set<Marker> _markers = {};
-  final Set<Polyline> _polylines = {};
+  final MapController _mapController = MapController();
+  final List<Marker> _markers = [];
+  final List<Polyline> _polylines = [];
+  final List<Timer> _timers = [];
   
   // Mock delivery person location (moving towards delivery location)
   final LatLng _deliveryPersonLocation = const LatLng(6.6018, 3.3515); // Starting point
@@ -37,54 +40,66 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
     _startDeliverySimulation();
   }
 
+  @override
+  void dispose() {
+    // Cancel all timers to prevent memory leaks
+    for (var timer in _timers) {
+      timer.cancel();
+    }
+    super.dispose();
+  }
+
   void _initializeMap() {
     // Add delivery person marker
     _markers.add(
       Marker(
-        markerId: const MarkerId('delivery_person'),
-        position: _deliveryPersonLocation,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        infoWindow: const InfoWindow(title: 'Delivery Person'),
+        point: _deliveryPersonLocation,
+        width: 40,
+        height: 40,
+        child: const Icon(
+          Icons.local_shipping,
+          color: Colors.blue,
+          size: 30,
+        ),
       ),
     );
 
     // Add destination marker
     _markers.add(
       Marker(
-        markerId: const MarkerId('destination'),
-        position: _destinationLocation,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: InfoWindow(title: widget.deliveryLocation),
+        point: _destinationLocation,
+        width: 40,
+        height: 40,
+        child: const Icon(
+          Icons.location_on,
+          color: Colors.green,
+          size: 30,
+        ),
       ),
     );
 
     // Add route polyline
     _polylines.add(
       Polyline(
-        polylineId: const PolylineId('route'),
-        color: AppColors.primary,
-        width: 4,
         points: [_deliveryPersonLocation, _destinationLocation],
-        patterns: [
-          PatternItem.dash(20),
-          PatternItem.gap(10),
-        ],
+        strokeWidth: 4,
+        color: AppColors.primary,
       ),
     );
   }
 
   void _startDeliverySimulation() {
     // Simulate delivery progress
-    Future.delayed(const Duration(seconds: 3), () {
+    _timers.add(Timer(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           _currentStatus = DeliveryStatus.pickedUp;
           _estimatedMinutes = 12;
         });
       }
-    });
+    }));
 
-    Future.delayed(const Duration(seconds: 6), () {
+    _timers.add(Timer(const Duration(seconds: 6), () {
       if (mounted) {
         setState(() {
           _currentStatus = DeliveryStatus.inTransit;
@@ -92,9 +107,9 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
           _updateDeliveryPersonLocation();
         });
       }
-    });
+    }));
 
-    Future.delayed(const Duration(seconds: 10), () {
+    _timers.add(Timer(const Duration(seconds: 10), () {
       if (mounted) {
         setState(() {
           _currentStatus = DeliveryStatus.nearby;
@@ -102,9 +117,9 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
           _updateDeliveryPersonLocation();
         });
       }
-    });
+    }));
 
-    Future.delayed(const Duration(seconds: 14), () {
+    _timers.add(Timer(const Duration(seconds: 14), () {
       if (mounted) {
         setState(() {
           _currentStatus = DeliveryStatus.delivered;
@@ -112,7 +127,7 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
           _updateDeliveryPersonLocation();
         });
       }
-    });
+    }));
   }
 
   void _updateDeliveryPersonLocation() {
@@ -120,14 +135,21 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
     final newLat = _deliveryPersonLocation.latitude + 0.001;
     final newLng = _deliveryPersonLocation.longitude + 0.0005;
     
+    if (!mounted) return;
+    
     setState(() {
-      _markers.removeWhere((m) => m.markerId == const MarkerId('delivery_person'));
+      // Remove old delivery person marker and add new one
+      _markers.removeWhere((m) => m.point == _deliveryPersonLocation);
       _markers.add(
         Marker(
-          markerId: const MarkerId('delivery_person'),
-          position: LatLng(newLat, newLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: 'Delivery Person'),
+          point: LatLng(newLat, newLng),
+          width: 40,
+          height: 40,
+          child: const Icon(
+            Icons.local_shipping,
+            color: Colors.blue,
+            size: 30,
+          ),
         ),
       );
     });
@@ -148,19 +170,27 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen> {
             Expanded(
               child: Stack(
                 children: [
-                  GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _deliveryPersonLocation,
-                      zoom: 15,
+                  FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: _deliveryPersonLocation,
+                      initialZoom: 15,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                      ),
                     ),
-                    markers: _markers,
-                    polylines: _polylines,
-                    onMapCreated: (controller) {
-                      _mapController = controller;
-                    },
-                    myLocationEnabled: false,
-                    zoomControlsEnabled: false,
-                    compassEnabled: false,
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.campmartv2',
+                      ),
+                      PolylineLayer(
+                        polylines: _polylines,
+                      ),
+                      MarkerLayer(
+                        markers: _markers,
+                      ),
+                    ],
                   ),
                   Positioned(
                     top: 16,

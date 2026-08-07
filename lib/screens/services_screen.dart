@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../models/service.dart';
+import '../models/api/service.dart' as api_service;
+import '../services/ai_search_service.dart';
 import '../widgets/service_card.dart';
+import '../widgets/ai_suggestions_widget.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -15,6 +18,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
   String _searchQuery = '';
   String _selectedLocation = 'ALL';
   late TextEditingController _searchController;
+  
+  // AI Search
+  final AiSearchService _aiSearchService = AiSearchService();
+  AiSearchResult<api_service.Service>? _aiSearchResult;
+  bool _isSearching = false;
+  bool _showAiSuggestions = true;
 
   final List<String> _locations = ['ALL', 'Main Campus', 'Student Village', 'Tech Hub'];
 
@@ -28,6 +37,110 @@ class _ServicesScreenState extends State<ServicesScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _performAiSearch([String? query]) async {
+    final q = query ?? _searchQuery;
+    if (q.isEmpty) {
+      setState(() {
+        _aiSearchResult = null;
+        _showAiSuggestions = true;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    if (q.trim().length < 3) {
+      setState(() {
+        _aiSearchResult = null;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+
+    try {
+      // Add minimum delay to ensure loading animation is visible
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      final result = await _aiSearchService.searchServices(q);
+
+      if (!mounted || q != _searchQuery) return;
+
+      print('AI Search Results: ${result.exactMatches.length} exact, ${result.aiSuggestions.length} AI suggestions, usedAiFallback: ${result.usedAiFallback}');
+
+      setState(() {
+        _aiSearchResult = result;
+        _isSearching = false;
+      });
+    } catch (e) {
+      if (!mounted || q != _searchQuery) return;
+      print('Groq AI search error: $e');
+      setState(() {
+        _isSearching = false;
+        _aiSearchResult = null;
+      });
+    }
+  }
+
+  Widget _buildAiSuggestions() {
+    if (_aiSearchResult == null || _aiSearchResult!.aiSuggestions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return AiSuggestionsWidget<api_service.Service>(
+      suggestions: _aiSearchResult!.aiSuggestions,
+      userQuery: _searchQuery,
+      onDismiss: () => setState(() => _showAiSuggestions = false),
+      itemBuilder: (service) => ServiceAiSuggestionCard(
+        service: service,
+        onTap: () {
+          _toUiService(service);
+        },
+      ),
+    );
+  }
+
+  Widget _buildAiSearchButton() {
+    return ElevatedButton.icon(
+      onPressed: () => _performAiSearch(),
+      icon: const Icon(Icons.auto_awesome, size: 18),
+      label: const Text('Search with AI'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiSearchingIndicator() {
+    return const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          ),
+        ),
+        SizedBox(width: 12),
+        Text(
+          'Searching with AI...',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.primary,
+          ),
+        ),
+      ],
+    );
   }
 
   List<Service> get _filteredServices {
@@ -46,6 +159,33 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return services;
   }
 
+  // Results shown in the list: API results when searching, sample data otherwise
+  List<Service> get _displayedServices {
+    if (_searchQuery.isEmpty) return _filteredServices;
+    final result = _aiSearchResult;
+    if (result == null) return _filteredServices;
+
+    final apiMatches = result.exactMatches.map(_toUiService).toList();
+    if (apiMatches.isNotEmpty) return apiMatches;
+    return _filteredServices;
+  }
+
+  Service _toUiService(api_service.Service service) {
+    return Service(
+      id: service.id.toString(),
+      title: service.title,
+      description: service.description,
+      providerName: service.provider?.fullName ?? 'Unknown',
+      providerAvatarUrl: service.provider?.profileImage ?? '',
+      rating: service.rating,
+      reviewCount: service.totalRatings,
+      price: service.price,
+      category: service.category?.name ?? 'Uncategorized',
+      imageUrl: service.portfolioImages?.first ?? '',
+      isAvailable: service.availability == 'available',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -58,6 +198,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
               children: [
                 _buildHeroSection(),
                 _buildFilterSection(),
+                if (_showAiSuggestions && _aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty)
+                  _buildAiSuggestions(),
                 _buildServiceCount(),
                 _buildServiceList(),
                 const SizedBox(height: 24),
@@ -122,7 +264,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
             Expanded(
               child: TextField(
                 controller: _searchController,
-                onChanged: (value) => setState(() => _searchQuery = value),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                    _aiSearchResult = null;
+                    _showAiSuggestions = true;
+                    _isSearching = false;
+                  });
+                },
                 decoration: InputDecoration(
                   hintText: 'Search...',
                   hintStyle: TextStyle(
@@ -218,7 +367,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   Widget _buildServiceCount() {
-    final count = _filteredServices.length;
+    final count = _displayedServices.length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: RichText(
@@ -246,7 +395,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   Widget _buildServiceList() {
-    final services = _filteredServices;
+    final services = _displayedServices;
+
+    if (services.isEmpty &&
+        _aiSearchResult != null &&
+        _aiSearchResult!.aiSuggestions.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -286,6 +441,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 color: AppColors.onSurfaceVariant,
               ),
             ),
+            if (_searchQuery.trim().length >= 3) ...[
+              const SizedBox(height: 24),
+              _isSearching
+                  ? _buildAiSearchingIndicator()
+                  : _buildAiSearchButton(),
+            ],
           ],
         ),
       ),
