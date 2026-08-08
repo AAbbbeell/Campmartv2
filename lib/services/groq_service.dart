@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../config/ai_config.dart';
 import '../models/api/product.dart';
 import '../models/api/service.dart';
+import '../models/web_product.dart';
 
 class GroqService {
   final Dio _dio = Dio();
@@ -120,14 +122,69 @@ Suggest the most relevant services from the available list:''';
     }
   }
 
+  /// Search the internet for real products matching the query using Groq's
+  /// built-in web search (groq/compound-mini). Returns products with prices,
+  /// retailer sources and direct buy URLs.
+  Future<List<WebProduct>> searchWebProducts(String query) async {
+    await initialize();
+
+    final systemPrompt = '''You are a product search assistant for a campus marketplace called Campmart.
+Use web search to find REAL products available to buy right now that match the user's query.
+Guidelines:
+- Return up to ${AiConfig.webSearchMaxProducts} products
+- Prefer well-known retailers (Amazon, Best Buy, Walmart, eBay, etc.)
+- Only use information found by your web search. Never invent products, prices or URLs.
+- Return ONLY a JSON object with this exact structure:
+{"products":[{"title":"Product name","price":"\$100.00 or N/A","source":"bestbuy.com","url":"https://...","description":"one short sentence"}]}
+- If nothing relevant is found, return {"products":[]}''';
+
+    final userPrompt = 'Find products to buy for: "$query"';
+
+    try {
+      final response = await _dio.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        data: {
+          'model': AiConfig.groqWebSearchModel,
+          'messages': [
+            {'role': 'system', 'content': systemPrompt},
+            {'role': 'user', 'content': userPrompt},
+          ],
+          'response_format': {'type': 'json_object'},
+        },
+      );
+
+      final content = response.data['choices'][0]['message']['content'] ?? '';
+      final cleaned = content.trim().replaceFirst(
+        RegExp(r'^```[a-z]*\s*', caseSensitive: false),
+        '',
+      ).replaceFirst(RegExp(r'```\s*$'), '');
+      final decoded = jsonDecode(cleaned);
+      final items = decoded['products'] as List<dynamic>? ?? [];
+
+      return items
+          .whereType<Map<String, dynamic>>()
+          .map(WebProduct.fromJson)
+          .where((p) => p.title.isNotEmpty && p.url.isNotEmpty)
+          .toList();
+    } catch (e) {
+      print('Groq web search error: $e');
+      return [];
+    }
+  }
+
   List<String> _parseSuggestions(String response, List<dynamic> availableItems) {
     if (response.contains('NO_SUGGESTIONS')) {
       return [];
     }
 
-    final titleMap = <String, String>{};
+    final titles = <String>[];
     for (final item in availableItems) {
       final title = item is Product ? item.title : (item as Service).title;
+      titles.add(title);
+    }
+
+    final titleMap = <String, String>{};
+    for (final title in titles) {
       titleMap[_normalize(title)] = title;
     }
 
@@ -135,9 +192,26 @@ Suggest the most relevant services from the available list:''';
     for (final line in response.split('\n')) {
       final cleaned = _cleanSuggestionLine(line);
       if (cleaned.isEmpty) continue;
-      final actualTitle = titleMap[_normalize(cleaned)];
-      if (actualTitle != null && !suggestions.contains(actualTitle)) {
-        suggestions.add(actualTitle);
+
+      var actual = titleMap[_normalize(cleaned)];
+      if (actual == null) {
+        final normalizedLine = _normalize(cleaned);
+        String? best;
+        for (final title in titles) {
+          final normalizedTitle = _normalize(title);
+          if (normalizedTitle.isNotEmpty &&
+              normalizedLine.contains(normalizedTitle)) {
+            if (best == null ||
+                normalizedTitle.length > _normalize(best).length) {
+              best = title;
+            }
+          }
+        }
+        actual = best;
+      }
+
+      if (actual != null && !suggestions.contains(actual)) {
+        suggestions.add(actual);
       }
     }
     return suggestions;
@@ -153,6 +227,7 @@ Suggest the most relevant services from the available list:''';
     while (text.isNotEmpty && (text.endsWith('"') || text.endsWith("'"))) {
       text = text.substring(0, text.length - 1);
     }
+    text = text.replaceFirst(RegExp(r'\s*\([^)]*\)\s*$'), '');
     text = text.replaceFirst(RegExp(r'[.:;]+$'), '');
     return text.trim();
   }

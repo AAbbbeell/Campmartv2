@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../models/product.dart';
 import '../models/api/product.dart' as api_product;
+import '../models/web_product.dart';
 import '../services/wallet_service.dart';
 import '../services/ai_search_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/camp_search_bar.dart';
 import '../widgets/ai_suggestions_widget.dart';
+import '../widgets/web_search_results_widget.dart';
 import 'product_description_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
@@ -26,8 +29,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
   // AI Search
   final AiSearchService _aiSearchService = AiSearchService();
   AiSearchResult<api_product.Product>? _aiSearchResult;
+  List<WebProduct>? _webResults;
   bool _isSearching = false;
   bool _showAiSuggestions = true;
+  bool _showWebResults = true;
 
   final List<String> _categories = [
     'All',
@@ -111,11 +116,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
         const SizedBox(height: 12),
         _buildCategoryChips(),
         const SizedBox(height: 12),
+        if (_showWebResults && _webResults != null && _webResults!.isNotEmpty)
+          _buildWebResults(),
         if (_showAiSuggestions && _aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty)
           _buildAiSuggestions(),
         Expanded(
           child: _displayedProducts.isEmpty
-              ? (_aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty
+              ? ((_aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty) ||
+                    (_showWebResults && _webResults != null && _webResults!.isNotEmpty)
                   ? const SizedBox.shrink()
                   : _buildEmptyState())
               : _buildProductGrid(),
@@ -135,7 +143,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
           setState(() {
             _searchQuery = value;
             _aiSearchResult = null;
+            _webResults = null;
             _showAiSuggestions = true;
+            _showWebResults = true;
             _isSearching = false;
           });
         },
@@ -169,15 +179,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
       // Add minimum delay to ensure loading animation is visible
       await Future.delayed(const Duration(milliseconds: 400));
 
-      final result = await _aiSearchService.searchProducts(q);
+      final resultFuture = _aiSearchService.searchProducts(q);
+      final webFuture = _aiSearchService.searchWebProducts(q);
+
+      final result = await resultFuture;
+      final webResults = await webFuture;
 
       if (!mounted || q != _searchQuery) return;
 
-      print('AI Search Results: ${result.exactMatches.length} exact, ${result.aiSuggestions.length} AI suggestions, usedAiFallback: ${result.usedAiFallback}');
+      print('AI Search Results: ${result.exactMatches.length} exact, ${result.aiSuggestions.length} AI suggestions, ${webResults.length} web results');
 
       setState(() {
         _aiSearchResult = result;
+        _webResults = webResults;
         _isSearching = false;
+        _showWebResults = true;
+        _showAiSuggestions = true;
       });
     } catch (e) {
       if (!mounted || q != _searchQuery) return;
@@ -185,7 +202,37 @@ class _ProductsScreenState extends State<ProductsScreen> {
       setState(() {
         _isSearching = false;
         _aiSearchResult = null;
+        _webResults = null;
       });
+    }
+  }
+
+  Widget _buildWebResults() {
+    if (_webResults == null || _webResults!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return WebSearchResultsPanel(
+      products: _webResults!,
+      userQuery: _searchQuery,
+      onDismiss: () => setState(() => _showWebResults = false),
+      itemBuilder: (product) => WebProductCard(
+        product: product,
+        onTap: () => _openWebProduct(product),
+      ),
+    );
+  }
+
+  Future<void> _openWebProduct(WebProduct product) async {
+    final uri = Uri.tryParse(product.url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return;
+    }
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the retailer link.')),
+      );
     }
   }
 
@@ -376,6 +423,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
             _isSearching
                 ? _buildAiSearchingIndicator()
                 : _buildAiSearchButton(),
+            if (_aiSearchResult != null &&
+                _aiSearchResult!.exactMatches.isEmpty &&
+                _aiSearchResult!.aiSuggestions.isEmpty &&
+                (_webResults == null || _webResults!.isEmpty)) ...[
+              const SizedBox(height: 12),
+              Text(
+                'No AI suggestions or web results found for this search.',
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
           ],
         ],
       ),

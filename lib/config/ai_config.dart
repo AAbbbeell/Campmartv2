@@ -13,6 +13,11 @@ class AiConfig {
   static const String groqModel = 'llama-3.1-8b-instant';
   static const int maxTokens = 150;
   static const double temperature = 0.7;
+
+  // Web search model (groq/compound-mini has built-in web search).
+  // Note: web search is a billable Groq feature billed per query.
+  static const String groqWebSearchModel = 'groq/compound-mini';
+  static const int webSearchMaxProducts = 5;
   
   // AI Search Configuration
   static const int maxAiSuggestions = 5;

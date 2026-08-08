@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../models/service.dart';
 import '../models/api/service.dart' as api_service;
+import '../models/web_product.dart';
 import '../services/ai_search_service.dart';
 import '../widgets/service_card.dart';
 import '../widgets/ai_suggestions_widget.dart';
+import '../widgets/web_search_results_widget.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -22,8 +25,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
   // AI Search
   final AiSearchService _aiSearchService = AiSearchService();
   AiSearchResult<api_service.Service>? _aiSearchResult;
+  List<WebProduct>? _webResults;
   bool _isSearching = false;
   bool _showAiSuggestions = true;
+  bool _showWebResults = true;
 
   final List<String> _locations = ['ALL', 'Main Campus', 'Student Village', 'Tech Hub'];
 
@@ -64,15 +69,22 @@ class _ServicesScreenState extends State<ServicesScreen> {
       // Add minimum delay to ensure loading animation is visible
       await Future.delayed(const Duration(milliseconds: 400));
 
-      final result = await _aiSearchService.searchServices(q);
+      final resultFuture = _aiSearchService.searchServices(q);
+      final webFuture = _aiSearchService.searchWebProducts(q);
+
+      final result = await resultFuture;
+      final webResults = await webFuture;
 
       if (!mounted || q != _searchQuery) return;
 
-      print('AI Search Results: ${result.exactMatches.length} exact, ${result.aiSuggestions.length} AI suggestions, usedAiFallback: ${result.usedAiFallback}');
+      print('AI Search Results: ${result.exactMatches.length} exact, ${result.aiSuggestions.length} AI suggestions, ${webResults.length} web results');
 
       setState(() {
         _aiSearchResult = result;
+        _webResults = webResults;
         _isSearching = false;
+        _showWebResults = true;
+        _showAiSuggestions = true;
       });
     } catch (e) {
       if (!mounted || q != _searchQuery) return;
@@ -80,7 +92,37 @@ class _ServicesScreenState extends State<ServicesScreen> {
       setState(() {
         _isSearching = false;
         _aiSearchResult = null;
+        _webResults = null;
       });
+    }
+  }
+
+  Widget _buildWebResults() {
+    if (_webResults == null || _webResults!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return WebSearchResultsPanel(
+      products: _webResults!,
+      userQuery: _searchQuery,
+      onDismiss: () => setState(() => _showWebResults = false),
+      itemBuilder: (product) => WebProductCard(
+        product: product,
+        onTap: () => _openWebProduct(product),
+      ),
+    );
+  }
+
+  Future<void> _openWebProduct(WebProduct product) async {
+    final uri = Uri.tryParse(product.url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return;
+    }
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the retailer link.')),
+      );
     }
   }
 
@@ -198,6 +240,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
               children: [
                 _buildHeroSection(),
                 _buildFilterSection(),
+                if (_showWebResults && _webResults != null && _webResults!.isNotEmpty)
+                  _buildWebResults(),
                 if (_showAiSuggestions && _aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty)
                   _buildAiSuggestions(),
                 _buildServiceCount(),
@@ -268,7 +312,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   setState(() {
                     _searchQuery = value;
                     _aiSearchResult = null;
+                    _webResults = null;
                     _showAiSuggestions = true;
+                    _showWebResults = true;
                     _isSearching = false;
                   });
                 },
@@ -398,8 +444,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final services = _displayedServices;
 
     if (services.isEmpty &&
-        _aiSearchResult != null &&
-        _aiSearchResult!.aiSuggestions.isNotEmpty) {
+        ((_aiSearchResult != null && _aiSearchResult!.aiSuggestions.isNotEmpty) ||
+            (_showWebResults && _webResults != null && _webResults!.isNotEmpty))) {
       return const SizedBox.shrink();
     }
 
@@ -446,6 +492,18 @@ class _ServicesScreenState extends State<ServicesScreen> {
               _isSearching
                   ? _buildAiSearchingIndicator()
                   : _buildAiSearchButton(),
+              if (_aiSearchResult != null &&
+                  _aiSearchResult!.exactMatches.isEmpty &&
+                  _aiSearchResult!.aiSuggestions.isEmpty &&
+                  (_webResults == null || _webResults!.isEmpty)) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'No AI suggestions or web results found for this search.',
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ],
           ],
         ),
