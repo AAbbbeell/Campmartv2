@@ -48,4 +48,3 @@ Map<String, dynamic> _$CartSummaryToJson(CartSummary instance) =>
       'totalDeliveryFee': instance.totalDeliveryFee,
       'totalAmount': instance.totalAmount,
     };
-1333s23
